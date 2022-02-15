@@ -7,12 +7,6 @@ type FormInput = {
   todo: string;
 };
 
-export default function TodoPage() {
-  return <Bind>
-    <Todos />
-  </Bind>
-}
-
 const Todos = () => {
   const data = useLoaderData<{ todos: Todo[] }>();
   const create = useAction("add");
@@ -70,3 +64,5 @@ const Profile = () => {
     <div>Profile {data.hello}</div>
   </>
 }
+
+export default Todos;
