@@ -1,26 +1,39 @@
-import { bind, Bind, useLoaderData, useAction } from "~/lib/Bind";
+import { Bind, useLoaderData, useAction } from "~/lib/Bind";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { useState } from "react";
+import { Todo } from "~/store";
 
 type FormInput = {
   todo: string;
 };
 
+export default function TodoPage() {
+  return <Bind>
+    <Todos />
+  </Bind>
+}
+
 const Todos = () => {
-  const data = useLoaderData<{ todos: string[] }>();
+  const data = useLoaderData<{ todos: Todo[] }>();
   const create = useAction("add");
+  const remove = useAction("remove");
 
   const { register, handleSubmit } = useForm<FormInput>();
   const onSubmit: SubmitHandler<FormInput> = (data) => create(data);
 
-  const [selectedTodo, setSelectedTodo] = useState<number>();
+  const [selectedTodo, setSelectedTodo] = useState<string>();
 
   return (
     <>
-      {data.todos.map((todo, index) => (
-        <div key={index} >
-          {todo}
-          <button onClick={() => setSelectedTodo(index)}>edit</button>
+      <h1>To do list</h1>
+      {data.todos.map(({ value, id }) => (
+        <div key={id} >
+          {value}
+          <button onClick={() => setSelectedTodo(id)}>edit</button>
+          <button onClick={() => {
+            remove({ id })
+            if (selectedTodo === id) setSelectedTodo(undefined);
+          }}>delete</button>
         </div>
       ))}
 
@@ -34,9 +47,9 @@ const Todos = () => {
       <Bind path="profile" absolute>
         <Profile />
       </Bind>
-      <div>Selected {selectedTodo}</div>
+
       {selectedTodo !== undefined &&
-        <Bind path={selectedTodo.toString()}>
+        <Bind path={selectedTodo}>
           <TodoDetail />
         </Bind>
       }
@@ -45,7 +58,7 @@ const Todos = () => {
 };
 
 const TodoDetail = () => {
-  const data = useLoaderData<Record<string, any>>();
+  const data = useLoaderData<{ todo: Todo }>();
   return <>
     <div>{JSON.stringify(data)}</div>
   </>
@@ -57,5 +70,3 @@ const Profile = () => {
     <div>Profile {data.hello}</div>
   </>
 }
-
-export default bind(Todos);

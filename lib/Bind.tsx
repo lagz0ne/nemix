@@ -29,11 +29,13 @@ function fetcher(
   options?: Record<string, any>,
   data?: any
 ) {
+  console.log("Fetching", pathname, op, data)
+
   return fetch(pathname, {
     mode: "cors",
     headers: { op, "Content-Type": "application/json" },
     ...options,
-    body: data ? JSON.stringify(data) : undefined,
+    body: data !== undefined ? JSON.stringify(data) : undefined,
   });
 }
 
@@ -100,7 +102,6 @@ function useBind(bindOptions?: BindOptions) {
 
   const refetch = useMemo(
     () => async () => {
-      console.log("Fetching", path)
       return fetcher(path, "loader")
         .then((response) => response.json())
         .then((data) => {
@@ -117,9 +118,7 @@ function useBind(bindOptions?: BindOptions) {
 
   const exec = useMemo(
     () => (op: string, options?: Record<string, any>, data?: any) => {
-      console.log(options);
       if (options?.["refetch"]) {
-        console.log("Refetching");
         fetcher(path, op, options, data)
           .then((response) => {
             console.log("Digesting response", response);
@@ -129,7 +128,6 @@ function useBind(bindOptions?: BindOptions) {
           })
           .catch(console.error);
       } else {
-        console.log("Executing");
         fetcher(pathname, op, options, data)
           .then((response) => response.json())
           .then((data) => {
@@ -141,44 +139,16 @@ function useBind(bindOptions?: BindOptions) {
           .finally(() => setLoading(false));
       }
     },
-    []
+    [path, pathname, refetch]
   );
 
   useEffect(() => {
     refetch();
-  }, [path]);
+  }, [refetch]);
 
   return {
     initialized, data, loading, error, exec, refetch, path
   }
 }
 
-// Providing context
-const bind = (Component: () => JSX.Element) => (props: any) => {
-  const {
-    initialized, data, loading, error, exec, refetch, path
-  } = useBind();
-
-  if (initialized) {
-    return (
-      <div>
-        <BindContext.Provider
-          value={{
-            data,
-            loading,
-            error,
-            refetch,
-            exec,
-            bindPath: path
-          }}
-        >
-          <Component {...props} />
-        </BindContext.Provider>
-      </div>
-    );
-  } else {
-    return null;
-  }
-};
-
-export { bind, Bind };
+export { Bind };

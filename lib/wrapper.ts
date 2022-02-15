@@ -7,7 +7,7 @@ type JSONValue =
   | { [x: string]: JSONValue }
   | Array<JSONValue>;
 
-type Callback = ({ req }: { req: NextApiRequest }) => Promise<JSONValue | void>;
+type Callback = ({ req }: { req: NextApiRequest }) => Promise<JSONValue | void | undefined>;
 
 type Operations = {
   [key: string]: Callback;
