@@ -12,7 +12,7 @@ const Todos = () => {
   const create = useAction("add");
   const remove = useAction("remove");
 
-  const { register, handleSubmit } = useForm<FormInput>();
+  const { register, handleSubmit, reset } = useForm<FormInput>({ defaultValues: { "todo": "" } });
   const onSubmit: SubmitHandler<FormInput> = (data) => create(data);
 
   const [selectedTodo, setSelectedTodo] = useState<string>();
@@ -20,10 +20,14 @@ const Todos = () => {
   return (
     <>
       <h1>To do list</h1>
+
       {data.todos.map(({ value, id }) => (
         <div key={id} >
           {value}
-          <button onClick={() => setSelectedTodo(id)}>edit</button>
+          <button onClick={() => {
+            setSelectedTodo(id);
+            reset();
+          }}>edit</button>
           <button onClick={() => {
             remove({ id })
             if (selectedTodo === id) setSelectedTodo(undefined);

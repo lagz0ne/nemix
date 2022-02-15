@@ -13,7 +13,6 @@ export default wrap({
   },
   remove: async ({req}) => {
     const param = req.body;
-    console.log(param.id);
 
     store.del(param.id);
     return;
