@@ -9,6 +9,7 @@ type Binder = {
   error: any;
   refetch: (op: string, options?: Record<string, any>, data?: any) => void;
   exec: (op: string, options?: Record<string, any>, data?: any) => void;
+  bindPath: string
 };
 
 export function useLoaderData<T>() {
@@ -28,7 +29,7 @@ function fetcher(
   options?: Record<string, any>,
   data?: any
 ) {
-  return fetch(`/api${pathname}`, {
+  return fetch(pathname, {
     mode: "cors",
     headers: { op, "Content-Type": "application/json" },
     ...options,
@@ -36,17 +37,71 @@ function fetcher(
   });
 }
 
-// Providing context
-const bind = (Component: () => JSX.Element) => (props: any) => {
+type Bind = {
+  path?: string;
+  absolute?: boolean;
+  children: React.ReactNode;
+}
+
+const Bind: React.FC<Bind> = ({ path, absolute, children }) => {
+  const {
+    initialized, data, loading, error, exec, refetch, path: bindPath
+  } = useBind({ path, absolute });
+  console.log(initialized, data)
+  if (initialized) {
+    return <BindContext.Provider
+      value={{
+        data,
+        loading,
+        error,
+        refetch,
+        exec,
+        bindPath
+      }}
+    >
+      {children}
+    </BindContext.Provider>
+  }
+
+  return null;
+}
+
+type BindOptions = {
+  path?: string;
+  absolute?: boolean;
+  op?: string;
+  params?: Record<string, any>
+}
+
+const BASE_URL = "/api/_pages";
+
+function useBind(bindOptions?: BindOptions) {
   const { pathname } = useRouter();
+  const binder = useContext(BindContext);
+
+  let base = binder ? binder.bindPath : BASE_URL;
+
   const [initialized, setInitialized] = useState<boolean>(false);
   const [data, setData] = useState<any>();
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<any>();
 
+  let path = `${BASE_URL}${pathname}`;
+  if (bindOptions?.path == undefined && bindOptions?.absolute) {
+    throw new Error("Cannot use absolute without path");
+  }
+
+  if (bindOptions?.absolute && bindOptions?.path !== undefined) {
+    path = bindOptions.path;
+  } else {
+    path = bindOptions?.path ? `${base}/${bindOptions?.path}`
+      : path;
+  }
+
   const refetch = useMemo(
     () => async () => {
-      return fetcher(pathname, "loader")
+      console.log("Fetching", path)
+      return fetcher(path, "loader")
         .then((response) => response.json())
         .then((data) => {
           setData(data);
@@ -57,7 +112,7 @@ const bind = (Component: () => JSX.Element) => (props: any) => {
         })
         .finally(() => setLoading(false));
     },
-    []
+    [path]
   );
 
   const exec = useMemo(
@@ -65,7 +120,7 @@ const bind = (Component: () => JSX.Element) => (props: any) => {
       console.log(options);
       if (options?.["refetch"]) {
         console.log("Refetching");
-        fetcher(pathname, op, options, data)
+        fetcher(path, op, options, data)
           .then((response) => {
             console.log("Digesting response", response);
             if (response.status === 200) {
@@ -91,7 +146,18 @@ const bind = (Component: () => JSX.Element) => (props: any) => {
 
   useEffect(() => {
     refetch();
-  }, []);
+  }, [path]);
+
+  return {
+    initialized, data, loading, error, exec, refetch, path
+  }
+}
+
+// Providing context
+const bind = (Component: () => JSX.Element) => (props: any) => {
+  const {
+    initialized, data, loading, error, exec, refetch, path
+  } = useBind();
 
   if (initialized) {
     return (
@@ -103,6 +169,7 @@ const bind = (Component: () => JSX.Element) => (props: any) => {
             error,
             refetch,
             exec,
+            bindPath: path
           }}
         >
           <Component {...props} />
@@ -114,4 +181,4 @@ const bind = (Component: () => JSX.Element) => (props: any) => {
   }
 };
 
-export { bind };
+export { bind, Bind };
