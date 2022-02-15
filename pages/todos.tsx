@@ -31,7 +31,7 @@ const Todos = () => {
         </form>
       </div>
 
-      <Bind path="profile">
+      <Bind path="profile" absolute>
         <Profile />
       </Bind>
       <div>Selected {selectedTodo}</div>

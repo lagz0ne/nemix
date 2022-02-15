@@ -92,7 +92,7 @@ function useBind(bindOptions?: BindOptions) {
   }
 
   if (bindOptions?.absolute && bindOptions?.path !== undefined) {
-    path = bindOptions.path;
+    path = `${BASE_URL}/${bindOptions.path}`;
   } else {
     path = bindOptions?.path ? `${base}/${bindOptions?.path}`
       : path;
