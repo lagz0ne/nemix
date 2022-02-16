@@ -1,0 +1,14 @@
+{
+  "name": "nemix",
+  "version": "1.0.0",
+  "description": "Applying certain Remix design patterns to Next application",
+  "main": "index.js",
+  "scripts": {},
+  "keywords": [],
+  "author": "Lagz0ne",
+  "license": "ISC",
+  "dependencies": {
+    "@types/react": "^17.0.39",
+    "react": "^17.0.2"
+  }
+}
